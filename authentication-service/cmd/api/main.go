@@ -26,7 +26,7 @@ func main() {
 
 	// TODO connect to DB
 	conn := connectToDB()
-	if conn != nil {
+	if conn == nil {
 		log.Panic("Cannot connect to Postgres!")
 	}
 
@@ -50,11 +50,12 @@ func main() {
 func openDB(dsn string) (*pgx.Conn, error) {
 	db, err := pgx.Connect(context.Background(), dsn)
 	if err != nil {
+		log.Println(err.Error())
 		return nil, err
 	}
 	defer db.Close(context.Background())
 
-	err = db.Ping()
+	err = db.Ping(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +65,7 @@ func openDB(dsn string) (*pgx.Conn, error) {
 
 func connectToDB() *pgx.Conn {
 	dsn := os.Getenv("DSN")
+	log.Println(dsn)
 
 	for {
 		connection, err := openDB(dsn)
@@ -82,6 +84,5 @@ func connectToDB() *pgx.Conn {
 
 		log.Println("Backing off for two seconds...")
 		time.Sleep(2 * time.Second)
-		continue
 	}
 }

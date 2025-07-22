@@ -1,4 +1,3 @@
-
 services:
   broker-service:
     build:
@@ -10,3 +9,31 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+
+  authentication-service:
+    build:
+      context: ./../authentication-service
+      dockerfile: ./../authentication-service/authentication-service.dockerfile
+    ports:
+      - 8081:80
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      DSN: postgres://postgres:password@postgres:5432/users?sslmode=disable&timezone=UTC&connect_timeout=5
+
+  postgres:
+    image: postgres:17.5-alpine
+    ports:
+      - 5432:5432
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
+    volumes:
+      - ./db-data/postgres/:/var/lib/postgresql/data/
