@@ -29,6 +29,7 @@ func main() {
 	if conn == nil {
 		log.Panic("Cannot connect to Postgres!")
 	}
+	defer conn.Close(context.Background())
 
 	// setup config
 	app := Config{
@@ -53,7 +54,6 @@ func openDB(dsn string) (*pgx.Conn, error) {
 		log.Println(err.Error())
 		return nil, err
 	}
-	defer db.Close(context.Background())
 
 	err = db.Ping(context.Background())
 	if err != nil {
@@ -65,7 +65,6 @@ func openDB(dsn string) (*pgx.Conn, error) {
 
 func connectToDB() *pgx.Conn {
 	dsn := os.Getenv("DSN")
-	log.Println(dsn)
 
 	for {
 		connection, err := openDB(dsn)
