@@ -3,5 +3,6 @@ brokerApp
 authenticationApp
 frontApp
 loggerServiceApp
+mailServiceApp
 
 /project/db-data/
