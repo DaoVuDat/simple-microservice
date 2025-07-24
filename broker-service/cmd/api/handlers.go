@@ -2,13 +2,18 @@ package main
 
 import (
 	"broker/event"
+	"broker/logs"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"net/rpc"
+	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type RequestPayload struct {
@@ -225,7 +230,7 @@ type RPCPayload struct {
 
 func (app *Config) logItemViaRPC(w http.ResponseWriter, l LogPayload) {
 	log.Println("logItemViaRPC...")
-	client, err := rpc.Dial("tcp", fmt.Sprintf("logger-service:5001"))
+	client, err := rpc.Dial("tcp", "logger-service:5001")
 	if err != nil {
 		app.errorJSON(w, err)
 		return
@@ -251,4 +256,46 @@ func (app *Config) logItemViaRPC(w http.ResponseWriter, l LogPayload) {
 	}
 
 	app.writeJSON(w, http.StatusAccepted, payload)
+}
+
+func (app *Config) logViaGRPC(w http.ResponseWriter, r *http.Request) {
+	var reqPayload RequestPayload
+
+	err := app.readJSON(w, r, &reqPayload)
+	if err != nil {
+		app.errorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	conn, err := grpc.NewClient(
+		"logger-service:50051",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	defer conn.Close()
+
+	c := logs.NewLogServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	_, err = c.WriteLog(ctx, &logs.LogRequest{
+		LogEntry: &logs.Log{
+			Name: reqPayload.Log.Name,
+			Data: reqPayload.Log.Data,
+		},
+	})
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	resp := jsonResponse{
+		Error:   false,
+		Message: "Logged",
+	}
+
+	app.writeJSON(w, http.StatusAccepted, resp)
 }

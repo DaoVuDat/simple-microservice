@@ -10,6 +10,7 @@
                 <a id="authBroker-btn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Auth</a>
                 <a id="logger-btn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Log</a>
                 <a id="mail-btn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Mail</a>
+                <a id="logg-btn" class="btn btn-outline-secondary" href="javascript:void(0);">Test gRPC Log</a>
 
                 <div id="output" class="mt-5" style="outline: 1px solid silver; padding: 2em;">
                     <span class="text-muted">Output shows here...</span>
@@ -38,6 +39,7 @@
         let brokerBtn = document.getElementById("broker-btn");
         let authBrokerBtn = document.getElementById("authBroker-btn");
         let logBtn = document.getElementById("logger-btn");
+        let loggBtn = document.getElementById("logg-btn");
         let mailBtn = document.getElementById("mail-btn");
         let output = document.getElementById("output");
         let sent = document.getElementById("payload");
@@ -48,7 +50,8 @@
                 method: "POST",
             }
 
-            fetch("http:\/\/localhost:8080", body)
+            {{/* fetch("http:\/\/localhost:8080", body) */}}
+            fetch("http:\/\/192.168.64.18:8080", body)
                 .then((res) => res.json())
                 .then((data) => {
                     sent.innerHTML = "empty post request"
@@ -84,7 +87,9 @@
             }
 
 
-            fetch("http:\/\/localhost:8080/handle", body)
+            {{/* fetch("http:\/\/localhost:8080/handle", body) */}}
+            fetch("http:\/\/192.168.64.18:8080/handle", body)
+
                 .then((response) => response.json())
                 .then((data) => {
                     sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -119,7 +124,44 @@
             }
 
 
-            fetch("http:\/\/localhost:8080/handle", body)
+            {{/* fetch("http:\/\/localhost:8080/handle", body) */}}
+            fetch("http:\/\/192.168.64.18:8080/handle", body)
+                .then((response) => response.json())
+                .then((data) => {
+                    sent.innerHTML = JSON.stringify(payload, undefined, 4);
+                    received.innerHTML = JSON.stringify(data, undefined, 4);
+                    if (data.error) {
+                        output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
+                    } else {
+                        output.innerHTML += `<br><strong>Response from broker service</strong>: ${data.message}`;
+                    }
+                })
+                .catch((error) => {
+                    output.innerHTML += "<br><br>Eror: " + error;
+                })
+        })
+
+        loggBtn.addEventListener("click", () => {
+            const payload = {
+                action: "log",
+                log: {
+                    name: "event",
+                    data: "Some kind of grpc data",
+                }
+            }
+
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json");
+
+            const body = {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: headers,
+            }
+
+
+            {{/* fetch("http:\/\/localhost:8080/log-grpc", body) */}}
+            fetch("http:\/\/192.168.64.18:8080/log-grpc", body)
                 .then((response) => response.json())
                 .then((data) => {
                     sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -156,7 +198,8 @@
             }
 
 
-            fetch("http:\/\/localhost:8080/handle", body)
+            {{/* fetch("http:\/\/localhost:8080/handle", body) */}}
+            fetch("http:\/\/192.168.64.18:8080/handle", body)
                 .then((response) => response.json())
                 .then((data) => {
                     sent.innerHTML = JSON.stringify(payload, undefined, 4);

@@ -1,0 +1,82 @@
+services:
+  broker-service:
+    image: dalmvicky/broker-service:1.0.0
+    ports:
+      - 8080:80
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  listener-service:
+    image: dalmvicky/listener-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  authentication-service:
+    image: dalmvicky/authentication-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      DSN: postgres://postgres:password@postgres:5432/users?sslmode=disable&timezone=UTC&connect_timeout=5
+
+  logger-service:
+    image: dalmvicky/logger-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  mail-service:
+    image: dalmvicky/mail-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      MAIL_DOMAIN: localhost
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      FROM_NAME: John Smith
+      FROM_ADDRESS: john.smith@example.com
+
+  rabbitmq:
+    image: rabbitmq:4.1.2-alpine
+    deploy:
+      mode: global
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - 8025:8025
+    deploy:
+      mode: global # only one instance
+
+  mongo:
+    image: mongo:7.0.22-jammy
+    ports:
+      - 27017:27017
+    deploy:
+      mode: global
+    environment:
+      - MONGO_INITDB_DATABASE=logs
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - ./db-data/mongo:/data/db
+
+  postgres:
+    image: postgres:17.5-alpine
+    ports:
+      - 5432:5432
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
+    volumes:
+      - ./db-data/postgres/:/var/lib/postgresql/data/
