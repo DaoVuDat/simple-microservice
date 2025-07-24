@@ -4,5 +4,6 @@ authenticationApp
 frontApp
 loggerServiceApp
 mailServiceApp
+listenerServiceApp
 
 /project/db-data/
